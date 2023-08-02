@@ -126,25 +126,17 @@ module marketplace::listing {
 
     /// This should be called at the end of a listing.
     public(friend) fun extract_or_transfer_tokenv1(
-        recipient: address,
+        recipient: &signer,
         object: Object<TokenV1Container>,
     ) acquires TokenV1Container {
-        let direct_transfer_enabled = tokenv1::get_direct_transfer(recipient);
         let object_addr = object::object_address(&object);
-        if (direct_transfer_enabled) {
-            let TokenV1Container {
-                token,
-                delete_ref,
-                transfer_ref: _,
-            } = move_from(object_addr);
-            tokenv1::direct_deposit_with_opt_in(recipient, token);
-            object::delete(delete_ref);
-        } else {
-            let tokenv1_container = borrow_global<TokenV1Container>(object_addr);
-            let linear_transfer_ref =
-                object::generate_linear_transfer_ref(&tokenv1_container.transfer_ref);
-            object::transfer_with_ref(linear_transfer_ref, recipient);
-        };
+        let TokenV1Container {
+            token,
+            delete_ref,
+            transfer_ref: _,
+        } = move_from(object_addr);
+        tokenv1::deposit_token(recipient, token);
+        object::delete(delete_ref);
     }
 
     /// If the account did not have tokenv1 enabled, then it must call this after making the
@@ -171,7 +163,7 @@ module marketplace::listing {
     /// for depositing any profit and the fee schedule for the marketplaces commission.
     public(friend) fun close(
         object: Object<Listing>,
-        recipient: address,
+        recipient: &signer,
     ): (address, Object<FeeSchedule>) acquires Listing, TokenV1Container {
         let listing_addr = object::object_address(&object);
         let Listing {
@@ -186,7 +178,7 @@ module marketplace::listing {
         if (exists<TokenV1Container>(object::object_address(&object))) {
             extract_or_transfer_tokenv1(recipient, object::convert(object));
         } else {
-            object::transfer(&obj_signer, object, recipient);
+            object::transfer(&obj_signer, object, signer::address_of(recipient));
         };
         object::delete(delete_ref);
 
