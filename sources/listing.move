@@ -266,6 +266,10 @@ module marketplace::listing {
             events::token_metadata_for_tokenv2(object::convert(listing.object))
         }
     }
+    public fun listing_exists(object: Object<Listing>): bool {
+        let obj_addr = object::object_address(&object);
+        exists<Listing>(obj_addr)
+    }
 
     inline fun borrow_listing(object: Object<Listing>): &Listing acquires Listing {
         let obj_addr = object::object_address(&object);
