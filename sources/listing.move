@@ -231,19 +231,21 @@ module marketplace::listing {
             let payee_address = tokenv1::get_royalty_payee(&royalty);
             let numerator = tokenv1::get_royalty_numerator(&royalty);
             let denominator = tokenv1::get_royalty_denominator(&royalty);
-
-            let royalty_amount = math64::mul_div(amount, numerator, denominator);
+            let royalty_amount = bounded_percentage(amount, numerator, denominator);
             (payee_address, royalty_amount)
         } else {
             let royalty = tokenv2::royalty(listing.object);
             if (option::is_some(&royalty)) {
                 let royalty = option::destroy_some(royalty);
                 let payee_address = royalty::payee_address(&royalty);
-                let royalty_amount = math64::mul_div(
-                    amount,
-                    royalty::numerator(&royalty),
-                    royalty::denominator(&royalty)
-                );
+                let numerator = royalty::numerator(&royalty);
+                let denominator = royalty::denominator(&royalty);
+
+                let royalty_amount = if (denominator == 0) {
+                    0
+                } else {
+                    math64::mul_div(amount, numerator, denominator)
+                };
                 (payee_address, royalty_amount)
             } else {
                 (@0x0, 0)
@@ -270,7 +272,13 @@ module marketplace::listing {
         let obj_addr = object::object_address(&object);
         exists<Listing>(obj_addr)
     }
-
+    public inline fun bounded_percentage(amount: u64, numerator: u64, denominator: u64): u64 {
+        if (denominator == 0) {
+            0
+        } else {
+            math64::min(amount, math64::mul_div(amount, numerator, denominator))
+        }
+    }
     inline fun borrow_listing(object: Object<Listing>): &Listing acquires Listing {
         let obj_addr = object::object_address(&object);
         assert!(exists<Listing>(obj_addr), error::not_found(ENO_LISTING));

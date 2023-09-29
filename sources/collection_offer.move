@@ -11,7 +11,7 @@ module collection_offer {
     use std::option::{Self, Option};
     use std::signer;
     use std::string::String;
-
+    use aptos_std::math64;
     use aptos_framework::coin::{Self, Coin};
     use aptos_framework::object::{Self, DeleteRef, Object};
     use aptos_framework::timestamp;
@@ -388,13 +388,15 @@ module collection_offer {
         let coin_offer = borrow_global_mut<CoinOffer<CoinType>>(collection_offer_addr);
         let coins = coin::extract(&mut coin_offer.coins, price);
 
-        let royalty_charge = price * royalty_numerator / royalty_denominator;
+        let royalty_charge = listing::bounded_percentage(price, royalty_numerator, royalty_denominator);
+
         let royalties = coin::extract(&mut coins, royalty_charge);
         aptos_account::deposit_coins(royalty_payee, royalties);
 
         let fee_schedule = collection_offer_obj.fee_schedule;
         let commission_charge = fee_schedule::commission(fee_schedule, price);
-        let commission = coin::extract(&mut coins, commission_charge);
+        let actual_commission_charge = math64::min(commission_charge, coin::value(&coins));
+        let commission = coin::extract(&mut coins, actual_commission_charge);
         aptos_account::deposit_coins(fee_schedule::fee_address(fee_schedule), commission);
 
         aptos_account::deposit_coins(seller, coins);

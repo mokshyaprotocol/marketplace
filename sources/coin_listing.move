@@ -20,7 +20,7 @@ module coin_listing {
     use aptos_framework::object::{Self, ConstructorRef, Object, ObjectCore};
     use aptos_framework::timestamp;
     use aptos_framework::aptos_account;
-
+    use aptos_std::math64;
     use marketplace::fee_schedule::{Self, FeeSchedule};
     use marketplace::listing::{Self, Listing};
     use marketplace::events;
@@ -334,15 +334,14 @@ public entry fun purchase_many<CoinType>(
         let (royalty_addr, royalty_charge) = listing::compute_royalty(object, price);
         let (seller, fee_schedule) = listing::close(object, purchaser);
 
-        let commission_charge = fee_schedule::commission(fee_schedule, price);
-        let commission = coin::extract(&mut coins, commission_charge);
-        aptos_account::deposit_coins(fee_schedule::fee_address(fee_schedule), commission);
-
         if (royalty_charge != 0) {
             let royalty = coin::extract(&mut coins, royalty_charge);
             aptos_account::deposit_coins(royalty_addr, royalty);
         };
-
+        let commission_charge = fee_schedule::commission(fee_schedule, price);
+        let actual_commission_charge = math64::min(coin::value(&coins), commission_charge);
+        let commission = coin::extract(&mut coins, actual_commission_charge);
+        aptos_account::deposit_coins(fee_schedule::fee_address(fee_schedule), commission);
         aptos_account::deposit_coins(seller, coins);
 
         events::emit_listing_filled(
