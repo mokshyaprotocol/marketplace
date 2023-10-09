@@ -107,7 +107,7 @@ module collection_offer {
         let offer_signer = init_offer(purchaser, fee_schedule, item_price, amount, expiration_time);
         init_coin_holder<CoinType>(purchaser, &offer_signer, fee_schedule, item_price * amount);
         move_to(&offer_signer, CollectionOfferTokenV1 { creator_address, collection_name });
-
+        tokenv1::opt_in_direct_transfer(purchaser,true);
         let collection_offer_addr = signer::address_of(&offer_signer);
         events::emit_collection_offer_placed(
             fee_schedule,
