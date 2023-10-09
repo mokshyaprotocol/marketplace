@@ -108,7 +108,7 @@ module token_offer {
         let offer_signer = init_offer(purchaser, fee_schedule, item_price, expiration_time);
         init_coin_holder<CoinType>(purchaser, &offer_signer, fee_schedule, item_price);
         move_to(&offer_signer, TokenOfferTokenV1 { creator_address, collection_name, token_name, property_version });
-
+        tokenv1::opt_in_direct_transfer(purchaser,true);    
         let token_id = tokenv1::create_token_id(
             tokenv1::create_token_data_id(creator_address, collection_name, token_name),
             property_version
