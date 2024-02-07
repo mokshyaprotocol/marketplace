@@ -3,8 +3,7 @@ name = "Marketplace"
 version = "0.0.0"
 
 [addresses]
-marketplace = "_"
-
+marketplace = "584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9"
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git",rev="mainnet",subdir="aptos-move/framework/aptos-framework"}
 AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git",rev="mainnet",subdir="aptos-move/framework/aptos-token"}

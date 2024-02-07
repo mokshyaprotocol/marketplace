@@ -272,6 +272,9 @@ module marketplace::listing {
         let obj_addr = object::object_address(&object);
         exists<Listing>(obj_addr)
     }
+    public fun is_tokenv1(object: address):bool {
+        exists<TokenV1Container>(object)
+    }
     public inline fun bounded_percentage(amount: u64, numerator: u64, denominator: u64): u64 {
         if (denominator == 0) {
             0
