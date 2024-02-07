@@ -272,6 +272,7 @@ module marketplace::listing {
         let obj_addr = object::object_address(&object);
         exists<Listing>(obj_addr)
     }
+    #[view]
     public fun is_tokenv1(object: address):bool {
         exists<TokenV1Container>(object)
     }
