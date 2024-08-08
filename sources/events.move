@@ -2,7 +2,7 @@
 module marketplace::events {
     use std::error;
     use std::option::{Self, Option};
-    use std::string::String;
+    use std::string::{Self,String};
 
     use aptos_framework::event::{Self, EventHandle};
     use aptos_framework::object::{Self, Object};
@@ -414,5 +414,16 @@ module marketplace::events {
         let addr = object::object_address(&marketplace);
         assert!(exists<EventsV1>(addr), error::not_found(ENO_EVENTS_V1));
         borrow_global_mut<EventsV1>(addr)
+    }
+    
+    public fun token_metadata_for_tokenv2_burned(token: Object<tokenv2::Token>): TokenMetadata {
+        TokenMetadata {
+            creator_address: @0x1,
+            collection_name: string::utf8(b" burned"),
+            collection: option::none(),
+            token_name: string::utf8(b" burned"),
+            token: option::none(),
+            property_version: option::none(),
+        }
     }
 }

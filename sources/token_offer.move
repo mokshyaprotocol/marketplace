@@ -12,7 +12,7 @@ module token_offer {
     use std::string::String;
 
     use aptos_framework::coin::{Self, Coin};
-    use aptos_framework::object::{Self, DeleteRef, Object};
+    use aptos_framework::object::{Self, DeleteRef, Object,ObjectCore};
     use aptos_framework::timestamp;
 
     use aptos_token::token as tokenv1;
@@ -219,10 +219,19 @@ module token_offer {
             error::permission_denied(ENOT_OWNER),
         );
         let token_offer_obj = borrow_global_mut<TokenOffer>(token_offer_addr);
+         let obj = borrow_global<TokenOfferTokenV2>(token_offer_addr).token;
+        let token_address = object::object_address(&obj);
         let token_metadata = if (exists<TokenOfferTokenV2>(token_offer_addr)) {
-            events::token_metadata_for_tokenv2(
-                borrow_global<TokenOfferTokenV2>(token_offer_addr).token,
-            )
+            if(object::object_exists<TokenV2>(token_address)){
+                events::token_metadata_for_tokenv2(
+                    borrow_global<TokenOfferTokenV2>(token_offer_addr).token,
+                )
+            }
+            else{
+                events::token_metadata_for_tokenv2_burned(
+                    borrow_global<TokenOfferTokenV2>(token_offer_addr).token,
+                )
+            }
         } else {
             let offer_info = borrow_global<TokenOfferTokenV1>(token_offer_addr);
             events::token_metadata_for_tokenv1(
